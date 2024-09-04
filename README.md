@@ -20,7 +20,6 @@ where $P_a$ is the physical address, $r_s$ is the value of the segment
 register, and $O$ is the offset. For our case,
 
 $$
-
 P_a = 16(\text{F}000_{16}) + n = \boxed{\text{F}0000_{16} + n},
 $$
 
