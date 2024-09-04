@@ -1,9 +1,21 @@
 [org 0x7c00]
 
+;; https://wiki.osdev.org/Memory_Map_(x86)#Overview
+BIOS_START equ 0x000F0000
+BIOS_MAX   equ 0x000FFFFF
+
+BIOS_SIZE equ BIOS_MAX - BIOS_START   ;; 64 KiB
+
+
 %macro hcf 0
   cli
   hlt
   jmp $
+%endmacro
+
+%macro write_space 0
+  mov ax, 0x0e20
+  int 0x10
 %endmacro
 
 xor ax, ax
@@ -20,11 +32,28 @@ cli
   mov [UD2_EX_IRQ+2], ax
 sti
 
+;; Sweet! We can now do stuff.
+xor ax, ax
+mov ax, BIOS_START ;; See README.md, section "reading physical bytes"
+mov es, ax
+xor di, di    ;; DI is the n-th byte.
 
-;; Now we can do other stuff:)
+;; TODO: check if external disk exists.
 
+Loop:
+  cmp di, BIOS_SIZE
+  je Exit
+
+  mov cx, [es:di]   ;; CX has the actual byte at ES:DI
+  mov bx, cx
+  call printh
+  write_space
+
+  inc di
+  jmp Loop    ;; Keep going:)
+
+Exit:
 jmp $
-
 
 ud2_isr:
   pop ax      ;; AX => EIP
