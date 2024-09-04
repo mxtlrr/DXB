@@ -5,6 +5,7 @@ BIOS_START equ 0x000F0000
 BIOS_MAX   equ 0x000FFFFF
 
 BIOS_SIZE equ BIOS_MAX - BIOS_START   ;; 64 KiB
+BYTES_TO_READ equ 10
 
 
 %macro hcf 0
@@ -34,19 +35,22 @@ sti
 
 ;; Sweet! We can now do stuff.
 xor ax, ax
-mov ax, BIOS_START ;; See README.md, section "reading physical bytes"
+mov ax, 61440 ;; See README.md, section "reading physical bytes"
 mov es, ax
 xor di, di    ;; DI is the n-th byte.
 
 ;; TODO: check if external disk exists.
 
 Loop:
-  cmp di, BIOS_SIZE
+  cmp di, BYTES_TO_READ
   je Exit
 
   mov cx, [es:di]   ;; CX has the actual byte at ES:DI
-  mov bx, cx
-  call printh
+
+  ;; Write the byte to the screen.
+  ;; TODO: don't do this if the external disk does exist.
+  mov al, cl
+  call print_byte
   write_space
 
   inc di

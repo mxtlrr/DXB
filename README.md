@@ -20,7 +20,7 @@ where $P_a$ is the physical address, $r_s$ is the value of the segment
 register, and $O$ is the offset. For our case,
 
 $$
-P_a = 16(\text{F}000_{16}) + n = \boxed{\text{F}0000_{16} + n},
+P_a = 16(\text{F}000_{16}) + n = \boxed{\text{F}000_{16} + n},
 $$
 
 $n$ being the $n$-th byte we want to read, and the $16$ subscript denoting
@@ -30,10 +30,10 @@ Let's say we want to read the $20$-th byte of the ROM. We just substitute
 $20$ in, like so:
 
 $$
-\text{F}0000_{16} + 14_{16},
+\text{F}000_{16} + 14_{16},
 $$
 
-giving us $P_a = \text{F}0014_{16} = 983060_\text{10}$. Segmentation in
+giving us $P_a = \text{F}014_{16} = 983060_\text{10}$. Segmentation in
 this use case is very useful for accessing values greater than the limits
 of the registers we limit ourselves to -- that being $65535$.
 
