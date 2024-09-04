@@ -70,3 +70,30 @@ printh_end:
   pop ax
 
   ret
+
+
+;; Write a byte to output.
+;; Input:
+;;  AL -> byte
+;; Source: https://stackoverflow.com/a/49846973
+print_byte:
+  push ax
+  shr al, 0x04
+  call .nibble
+  pop ax
+  and al, 0x0F
+  call .nibble
+  ret
+  .nibble:
+    cmp al, 0x09
+    jg .letter
+    add al, 0x30
+    mov ah, 0x0E
+    int 0x10
+    ret
+
+  .letter:
+    add al, 0x37
+    mov ah, 0x0E
+    int 0x10
+    ret   
