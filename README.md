@@ -50,16 +50,46 @@ compile the program. The output will be in `bin`
 TODO.
 
 ## Running on real hardware
-Wouldn't recommend it (though this is what the project is mainly built
-for.). A target in the Makefile, `make iso` will package DXB as an `ISO`
-file you can flash to your USB.
+Just run `make iso`. Note that this generates a `1.44` MB floppy image,
+as `dxb.img`. You can flash it to a USB like so:
+```sh
+# We are assuming /dev/sdc is:
+#   1. Blank
+#   2. Your USB
+$ sudo dd if=dxb.img of=/dev/sdc
+```
 
-Note that if you want to write to an actual disk and not have it outputted
-to the screen, you'll need to have **two usb** devices plugged in. DXB
-will detect it.
+# Accessing the data
 
-***DXB will overwrite the data on that disk. Make sure there's nothing
-you don't want deleted on it!!!***
+## Step 1: Getting Raw Data
+Luckily for us, we don't have to write any weird scripts, and `dd` is
+available on most *NIX systems. So, we can do something like this:
+```sh
+SECTOR_COUNT=130    # Sector 0: DXB code
+                    # Sector 1: Padding
+                    # Sector 2-130: BIOS ROM
+SECTOR_SIZE=512
+USB_BUS=/dev/sdc
+
+$ sudo dd if=$(USD_BUS) bs=$(SECTOR_SIZE) count=$(SECTOR_COUNT) of=raw.bin
+```
+
+## Step 2: Grabbing the sectors
+Again, we will use a built-in program to do this, in our case, this is
+`tail`:
+```sh
+# 128 sectors X 512 bytes per sector ==> 65536.
+$ tail -c 65536 raw.bin > bios.fd
+```
+
+## Step n: What's Next?
+If every command above worked, then `bios.fd` has the raw BIOS firmware
+of whatever provider you used. Now you can dissasemble it with
+```
+objdump -b binary -m i386 -D bios.fd
+```
+
+or, something else! It's up to you.
 
 # What's Planned?
 1. Somehow write to a FAT formatted partition (on said external drive
