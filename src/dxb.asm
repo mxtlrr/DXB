@@ -12,7 +12,6 @@ BYTES_TO_READ equ 10
 mov ax, 0x0003
 int 0x10
 
-
 %macro hcf 0
   cli
   hlt
@@ -23,6 +22,9 @@ int 0x10
   mov ax, 0x0e20
   int 0x10
 %endmacro
+
+%include "disk-check.asm"
+
 
 xor ax, ax
 mov ds, ax
@@ -60,7 +62,7 @@ je WriteToDisk
 cmp al, '2'
 je WriteOut
 
-jne $     ;; Neither. Sorry, we don't support that!
+jne $ ;; Neither. Sorry, we don't support that!
 
 
 WriteOut:
@@ -81,16 +83,71 @@ WriteOut:
 
     inc di
     jmp .Loop    ;; Keep going:)
-  jmp .Loop
+
+
+xor ax, ax
+mov es, ax    ;; Set ES to segment 0, disk writing
+
+mov ax, 61440 ;; Point FS to physical memory location
+mov fs, ax
+
+xor di, di
+mov cx, 3
+mov si, 0
 
 WriteToDisk:
-  mov ax, 0x0e5a
-  int 0x10
-  jmp $
+  cmp di, 512
+  je .Reset
+
+  mov al, [fs:si]
+  mov byte [buffer+di], al
+
+  inc di
+  jmp WriteToDisk
+
+  .Reset:
+    push di
+    cmp si, BIOS_SIZE   ;; End?
+    je Exit
+
+    ;; Write to disk
+    write_sector 1, cl, buffer
+    ; push bx
+    ;   xor bx, bx
+    ;   mov es, bx
+    ; pop bx
+    ; mov bx, buffer
+    ; call writeSectorData
+
+    inc cx
+    xor di, di
+
+    ;; Reset buffer
+    mov di, 0
+    .StupidLoop:
+      cmp di, 512
+      je .Leave
+
+      mov [buffer+di], byte 0
+      inc di
+      jmp .StupidLoop
+    .Leave:
+      xor di, di
+      pop di
+  jmp WriteToDisk
+
 
 Exit:
+  mov bx, splash4
+  call printf
   jmp $
 
+
+failed_op:
+  call print_byte
+  cli
+  hlt
+  jmp $
 
 ud2_isr:
   pop ax      ;; AX => EIP
@@ -99,7 +156,6 @@ ud2_isr:
 
   mov bx, ax
   call printh
-
   hcf
 
 str1: db `UD2 at `, 0
@@ -110,7 +166,8 @@ splash3: db `Press 1 to write, press 2 to output.\r\n`, 0
 splash4: db `Done!\r\n`, 0
 
 %include "util.asm"
-%include "disk-check.asm"
 
 times 510-($-$$) db 0
 dw 0xaa55
+
+buffer times 512 db 0
