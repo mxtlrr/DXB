@@ -7,6 +7,11 @@ BIOS_MAX   equ 0x000FFFFF
 BIOS_SIZE equ BIOS_MAX - BIOS_START   ;; 64 KiB
 BYTES_TO_READ equ 10
 
+;; Set video mode, just in case the BIOS didn't finish setting
+;; shit up
+mov ax, 0x0003
+int 0x10
+
 
 %macro hcf 0
   cli
@@ -33,13 +38,32 @@ cli
   mov [UD2_EX_IRQ+2], ax
 sti
 
+mov bx, splash1
+call printf
+
+;; Check if the floppy exists
+call newFloppyExist
+
+
 ;; Sweet! We can now do stuff.
 xor ax, ax
 mov ax, 61440 ;; See README.md, section "reading physical bytes"
 mov es, ax
 xor di, di    ;; DI is the n-th byte.
 
+
 ;; TODO: check if external disk exists.
+cmp si, 0
+jne $   ;; TODO: write a function that goes here lol. This should skip
+        ;; everything below.
+
+
+;; Wait for input before printing data out.
+mov ah, 0
+int 16h
+
+mov bx, splash2
+call printf
 
 Loop:
   cmp di, BYTES_TO_READ
@@ -70,7 +94,11 @@ ud2_isr:
   hcf
 
 str1: db `UD2 at `, 0
+
+splash1: db `Welcome to DXB!\r\n`, 0
+splash2: db `Printing out!\r\n`, 0
 %include "util.asm"
+%include "disk-check.asm"
 
 times 510-($-$$) db 0
 dw 0xaa55
