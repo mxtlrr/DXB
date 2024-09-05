@@ -41,10 +41,6 @@ sti
 mov bx, splash1
 call printf
 
-;; Check if the floppy exists
-;; FIXME: this breaks if on CD-ROM emulation. Fix!!
-call newFloppyExist
-
 
 ;; Sweet! We can now do stuff.
 xor ax, ax
@@ -52,37 +48,49 @@ mov ax, 61440 ;; See README.md, section "reading physical bytes"
 mov es, ax
 xor di, di    ;; DI is the n-th byte.
 
+mov bx, splash3
+call printf
 
-;; TODO: check if external disk exists.
-cmp si, 0
-jne $   ;; TODO: write a function that goes here lol. This should skip
-        ;; everything below.
-
-
-;; Wait for input before printing data out.
 mov ah, 0
 int 16h
 
-mov bx, splash2
-call printf
+cmp al, '1'
+je WriteToDisk
 
-Loop:
-  cmp di, BYTES_TO_READ
-  je Exit
+cmp al, '2'
+je WriteOut
 
-  mov cx, [es:di]   ;; CX has the actual byte at ES:DI
+jne $     ;; Neither. Sorry, we don't support that!
 
-  ;; Write the byte to the screen.
-  ;; TODO: don't do this if the external disk does exist.
-  mov al, cl
-  call print_byte
-  write_space
 
-  inc di
-  jmp Loop    ;; Keep going:)
+WriteOut:
+  mov bx, splash2
+  call printf
+
+  .Loop:
+    cmp di, BIOS_SIZE
+    je Exit
+
+    mov cx, [es:di]   ;; CX has the actual byte at ES:DI
+
+    ;; Write the byte to the screen.
+    ;; TODO: don't do this if the external disk does exist.
+    mov al, cl
+    call print_byte
+    write_space
+
+    inc di
+    jmp .Loop    ;; Keep going:)
+  jmp .Loop
+
+WriteToDisk:
+  mov ax, 0x0e5a
+  int 0x10
+  jmp $
 
 Exit:
-jmp $
+  jmp $
+
 
 ud2_isr:
   pop ax      ;; AX => EIP
@@ -98,6 +106,9 @@ str1: db `UD2 at `, 0
 
 splash1: db `Welcome to DXB!\r\n`, 0
 splash2: db `Printing out!\r\n`, 0
+splash3: db `Press 1 to write, press 2 to output.\r\n`, 0
+splash4: db `Done!\r\n`, 0
+
 %include "util.asm"
 %include "disk-check.asm"
 
