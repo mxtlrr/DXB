@@ -42,6 +42,7 @@ mov bx, splash1
 call printf
 
 ;; Check if the floppy exists
+;; FIXME: this breaks if on CD-ROM emulation. Fix!!
 call newFloppyExist
 
 
