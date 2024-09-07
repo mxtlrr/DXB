@@ -1,13 +1,14 @@
 # DXB
-DXB dumps the BIOS ROM/RAM onto an external disk. If it cannot find any disks, then it will output
-the ROM/RAM to the screen, in hex.
+DXB is a tool to dump BIOS ROM/RAM either onto a disk or onto VGA output.
 
-The BIOS ROM/RAM is located at physical address `0x000F0000`, and is 64kb (65535 bytes) wide. DXB
-first:
-1. Checks to see if there are more than one floppy (USB emulates floppy).
-If it doesn't find any, it will just output to the screen.
-2. It setups up segmentation `ES=0x0000F000, BX=0`
-3. Reads every byte at memory address `[ES:BX]` until `BX=0xFFFF`.
+The BIOS ROM/RAM is located at physical address `0x000F0000`, and is 64kb (65535 bytes) wide. DXB prompts the user if it wants to either write or
+output.
+
+If the user selects output, it will just print out every byte from
+`0x000F0000` to `0x000FFFFF`, separated by a space.
+
+However, if the user selects to write, it'll write to sector 3 through 131
+on the disk.
 
 ## How do you read the physical bytes?
 Segmentation in 16-bit real mode is
@@ -36,6 +37,9 @@ $$
 giving us $P_a = \text{F}014_{16} = 983060_\text{10}$. Segmentation in
 this use case is very useful for accessing values greater than the limits
 of the registers we limit ourselves to -- that being $65535$.
+
+# Screenshots
+TODO...
 
 # Building/Compiling DXB
 You'll need NASM. For right now, everything is written in real-mode x86
