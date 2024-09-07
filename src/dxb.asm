@@ -79,6 +79,7 @@ xor ax, ax
 mov ax, 0xF000
 mov es, ax
 WriteToDisk:
+  mov ch, 0x00
   xor di, di
   xor si, si
   mov dh, 3   ;; Sector number
