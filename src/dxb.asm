@@ -23,7 +23,6 @@ int 0x10
   int 0x10
 %endmacro
 
-%include "disk-check.asm"
 
 
 xor ax, ax
@@ -76,57 +75,45 @@ WriteOut:
     jmp .Loop    ;; Keep going:)
 
 
+;; Same thing as above
 xor ax, ax
-mov es, ax    ;; Set ES to segment 0, disk writing
-
 mov ax, 61440 ;; Point FS to physical memory location
 mov fs, ax
 
-xor di, di
-mov cx, 3
-mov si, 0
+;; Only documenting this function so I know what I'm doing
+;; later on
 
+;; SI is the offset of the BIOS ROM
+;; DI is the offset of buffer. If DI=512, set DI to 0, reset the buffer
+;; and jump back
+
+xor di, di
+xor si, si
 WriteToDisk:
-  cmp di, 512
+  ;; Sanity check
+  cmp si, 0xFFFF      ;; Dont overflow...
+  je Exit
+
+  ;; Every sector we reset.
+  cmp di, 0x200
   je .Reset
 
+  ;; AL has byte
   mov al, [fs:si]
-  mov byte [buffer+di], al
+  mov [buffer+di], al   ;; Send byte to buffer
 
+  inc si
   inc di
   jmp WriteToDisk
 
   .Reset:
-    push di
-    cmp si, BIOS_SIZE   ;; End?
-    je Exit
-
-    ;; Write to disk
-    write_sector 1, cl, buffer
-    ; push bx
-    ;   xor bx, bx
-    ;   mov es, bx
-    ; pop bx
-    ; mov bx, buffer
-    ; call writeSectorData
-
-    inc cx
     xor di, di
+    mov bx, si
+    call printh
 
-    ;; Reset buffer
-    mov di, 0
-    .StupidLoop:
-      cmp di, 512
-      je .Leave
+    write_space
 
-      mov [buffer+di], byte 0
-      inc di
-      jmp .StupidLoop
-    .Leave:
-      xor di, di
-      pop di
-  jmp WriteToDisk
-
+    jmp WriteToDisk
 
 Exit:
   mov bx, splash4
@@ -145,6 +132,7 @@ splash2: db `Printing out!\r\n`, 0
 splash3: db `Press 1 to write, press 2 to output.\r\n`, 0
 splash4: db `Done!\r\n`, 0
 
+%include "disk-check.asm"
 %include "util.asm"
 
 times 510-($-$$) db 0
