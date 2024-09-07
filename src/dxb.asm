@@ -83,8 +83,13 @@ WriteToDisk:
   xor si, si
   mov dh, 3   ;; Sector number
   .Loop:
+    ;; 3 to 131 is 128 sectors
+    ;; 128*512 = 65535 bytes,
+    cmp dh, 131
+    je Exit
+
     cmp di, 512
-    je Exit2
+    je .Reset
 
     mov ax, [es:si]
     mov [buffer+di], al
@@ -94,10 +99,14 @@ WriteToDisk:
     jmp .Loop
     ret
 
-Exit2:
-  mov bx, buffer  ;; Buuff
-  call writeSector
+  .Reset:
+    mov bx, buffer  ;; Buuff
+    call writeSector
 
+
+    xor di, di
+    inc dh
+    jmp .Loop
 
 Exit:
   mov bx, splash4

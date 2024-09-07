@@ -13,15 +13,24 @@ writeSector:
     int 0x13
     jc .Failure
 
+    ;; Restore DH
+    mov dh, cl
+
     ;; Indicator
-    mov bx, wrote
-    call printf
+    mov al, dh
+    call print_byte
+
   pop es
   ret
 
   .Failure:
     mov ax, 0x0e5a
     int 0x10
+
+    ;; DL already set
+    mov ah, 0x01
+    int 0x10
     hcf
 
-wrote: db `I wrote data:)\r\n`, 0
+wrote1: db `Wrote sector `, 0
+wrote2: db `\r\n`, 0
