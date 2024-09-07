@@ -31,15 +31,6 @@ mov ds, ax
 mov ss, ax
 mov sp, 0x7c00
 
-;; Let's first setup a handler for a #UD, so I don't
-;; tear my hair out over it in the future.
-UD2_EX_IRQ equ 0x0018
-
-cli
-  mov word [UD2_EX_IRQ], ud2_isr
-  mov [UD2_EX_IRQ+2], ax
-sti
-
 mov bx, splash1
 call printf
 
@@ -148,17 +139,6 @@ failed_op:
   cli
   hlt
   jmp $
-
-ud2_isr:
-  pop ax      ;; AX => EIP
-  mov bx, str1
-  call printf
-
-  mov bx, ax
-  call printh
-  hcf
-
-str1: db `UD2 at `, 0
 
 splash1: db `Welcome to DXB!\r\n`, 0
 splash2: db `Printing out!\r\n`, 0
