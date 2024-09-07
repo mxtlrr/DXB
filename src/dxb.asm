@@ -77,43 +77,39 @@ WriteOut:
 
 ;; Same thing as above
 xor ax, ax
-mov ax, 61440 ;; Point FS to physical memory location
-mov fs, ax
-
-;; Only documenting this function so I know what I'm doing
-;; later on
-
-;; SI is the offset of the BIOS ROM
-;; DI is the offset of buffer. If DI=512, set DI to 0, reset the buffer
-;; and jump back
-
-xor di, di
+mov ax, 61440 ;; See README.md, section "reading physical bytes"
+mov es, ax
+xor di, di    ;; DI is the n-th byte.
 xor si, si
+
+mov dh, 3   ;; start at sector 3
 WriteToDisk:
-  ;; Sanity check
-  cmp si, 0xFFFF      ;; Dont overflow...
-  je Exit
+  .Loop:
+    cmp di, BIOS_SIZE
+    je Exit
 
-  ;; Every sector we reset.
-  cmp di, 0x200
-  je .Reset
+    cmp si, 512
+    je .Reset
 
-  ;; AL has byte
-  mov al, [fs:si]
-  mov [buffer+di], al   ;; Send byte to buffer
+    mov cx, [es:di]     ;; CX has the actual byte at ES:DI
+    mov [buffer+si], cl
 
-  inc si
-  inc di
-  jmp WriteToDisk
+    ; mov al, cl
+    ; call print_byte
+    ; write_space
+
+    inc di
+    inc si
+    jmp .Loop
 
   .Reset:
-    xor di, di
-    mov bx, si
-    call printh
+    xor si, si  ;; Clear counter
 
-    write_space
-
-    jmp WriteToDisk
+    mov bx, buffer
+    call writeSector
+    
+    inc dh
+    jmp .Loop
 
 Exit:
   mov bx, splash4
