@@ -75,41 +75,29 @@ WriteOut:
     jmp .Loop    ;; Keep going:)
 
 
-;; Same thing as above
 xor ax, ax
-mov ax, 61440 ;; See README.md, section "reading physical bytes"
+mov ax, 0xF000
 mov es, ax
-xor di, di    ;; DI is the n-th byte.
-xor si, si
-
-mov dh, 3   ;; start at sector 3
 WriteToDisk:
+  xor di, di
+  xor si, si
+  mov dh, 3   ;; Sector number
   .Loop:
-    cmp di, BIOS_SIZE
-    je Exit
+    cmp di, 512
+    je Exit2
 
-    cmp si, 512
-    je .Reset
-
-    mov cx, [es:di]     ;; CX has the actual byte at ES:DI
-    mov [buffer+si], cl
-
-    ; mov al, cl
-    ; call print_byte
-    ; write_space
+    mov ax, [es:si]
+    mov [buffer+di], al
 
     inc di
     inc si
     jmp .Loop
+    ret
 
-  .Reset:
-    xor si, si  ;; Clear counter
+Exit2:
+  mov bx, buffer  ;; Buuff
+  call writeSector
 
-    mov bx, buffer
-    call writeSector
-    
-    inc dh
-    jmp .Loop
 
 Exit:
   mov bx, splash4
@@ -134,4 +122,4 @@ splash4: db `Done!\r\n`, 0
 times 510-($-$$) db 0
 dw 0xaa55
 
-buffer times 512 db 0
+buffer times 512 db 0x00
