@@ -1,53 +1,16 @@
 # DXB
 DXB is a tool to dump BIOS ROM/RAM either onto a disk or onto VGA output.
-
-The BIOS ROM/RAM is located at physical address `0x000F0000`, and is 64kb (65535 bytes) wide. DXB prompts the user if it wants to either write or
-output.
-
-If the user selects output, it will just print out every byte from
-`0x000F0000` to `0x000FFFFF`, separated by a space.
-
-However, if the user selects to write, it'll write to sector 3 through 131
-on the disk.
-
-## How do you read the physical bytes?
-Segmentation in 16-bit real mode is
-
-$$
-P_a = (16r_s) + O,
-$$
-
-where $P_a$ is the physical address, $r_s$ is the value of the segment
-register, and $O$ is the offset. For our case,
-
-$$
-P_a = 16(\text{F}000_{16}) + n = \boxed{\text{F}000_{16} + n},
-$$
-
-$n$ being the $n$-th byte we want to read, and the $16$ subscript denoting
-that the number is in base 16. An example of this follows.
-
-Let's say we want to read the $20$-th byte of the ROM. We just substitute
-$20$ in, like so:
-
-$$
-\text{F}000_{16} + 14_{16},
-$$
-
-giving us $P_a = \text{F}014_{16} = 983060_\text{10}$. Segmentation in
-this use case is very useful for accessing values greater than the limits
-of the registers we limit ourselves to -- that being $65535$.
+TODO...
 
 # Screenshots
 TODO...
 
 # Building/Compiling DXB
-You'll need NASM. For right now, everything is written in real-mode x86
-assembly. I'd like to get C on bare-metal IA16 but I've yet to figure out
-how to do that with ia16-elf-gcc.
+You'll need NASM (stub) and ia16-elf-gcc. Once you're sure you have
+both of those, you can just run `make`.
 
-All you need to do is run `make`, which invokes the build script to
-compile the program. The output will be in `bin`
+### Acquiring IA16-ELF-GCC
+Run `./tool.sh ia16-elf`.
 
 # Using DXB
 ## QEMU
@@ -95,8 +58,5 @@ objdump -b binary -m i386 -D bios.fd
 
 or, something else! It's up to you.
 
-# What's Planned?
-1. Somehow write to a FAT formatted partition (on said external drive
-I mentioned earlier), not just writing raw sectors (requires $128$
-sectors to be written to disk)
-2. Better user interface.
+# Contributing
+The IA16-elf ABI documentation can be found [here](https://mpetch.github.io/ia16-gcc-6.3.0/gcc/index.html).
