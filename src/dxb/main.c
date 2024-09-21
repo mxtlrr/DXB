@@ -4,6 +4,7 @@
 
 #include "bios.h"
 #include "libc/stdio.h"
+#include "arch/idt.h"
 
 extern int check_386(void);
 extern void load_gdt(void);
@@ -23,9 +24,13 @@ void kmain(void){
 					VGA_COLOR_WHITE);
 
 	load_gdt();
-	printf("[ %gOK%g ] GDT is enabled\n", VGA_COLOR_LIGHT_GREEN, VGA_COLOR_WHITE);
+	printf("[ %gOK%g ] GDT is enabled!\n", VGA_COLOR_LIGHT_GREEN, VGA_COLOR_WHITE);
 
-	// Halt, we're done...
-	// Eventually I'll add some GDT/IDT...
-	for(;;);
+	idt_init();
+	printf("[ %gOK%g ] IDT is enabled!\n", VGA_COLOR_LIGHT_GREEN, VGA_COLOR_WHITE);
+
+	// Ok
+	asm("int $3");
+
+	for(;;) asm("hlt");
 }
