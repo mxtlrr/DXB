@@ -1,19 +1,14 @@
-AS  := nasm
+LINK 	 	 := linker.ld
+LDFLAGS	 := -ffreestanding -O2 -nostdlib
 
-all: dxb
-.PHONY: all
+OBJS := $(wildcard obj/*)
 
-dxb:
-	@mkdir -p bin/
-	@echo AS dxb.asm
-	@$(AS) -g -fbin -Iinclude/ src/dxb.asm -o bin/dxb.img
+all:
+	mkdir -p obj/ bin/
+	nasm -felf32 src/boot/stub.asm -o obj/stub.o
+	make -C src/dxb || exit
+	i386-elf-gcc -T$(LINK) -o bin/dxb.bin $(LDFLAGS) $(OBJS) -lgcc || exit
+	@./build_iso.sh
 
 clean:
-	rm -rf bin/ *.img *.iso iso/
-
-
-iso:
-	@echo Building floppy disk...
-	@dd if=/dev/zero of=dxb.img bs=512 count=2880
-	@dd if=bin/dxb.img of=dxb.img conv=notrunc
-	@echo Done!
+	rm -rf obj/ bin/ iso
