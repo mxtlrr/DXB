@@ -1,68 +1,32 @@
-[org 0x7c00]
+MBALIGN  equ 1<<0
+MEMINFO  equ 1<<1
+MBFLAGS  equ MBALIGN | MEMINFO
+MAGIC    equ 0x1BADB002
+CHECKSUM equ -(MAGIC + MBFLAGS)
 
-%macro hcf 0
-  cli
-  hlt
-  jmp $
-%endmacro
+section .multiboot
+align 4
 
-mov ax, 0x0204    ;; Read 4 sectors
-mov bx, 7e00h     ;; C code located here
-mov cx, 0x00002
-mov dh, 0x00
-int 0x13
-jc .Failure
+dd MAGIC
+dd MBFLAGS
+dd CHECKSUM
 
-;; Check if we're on 386.
-;; Won't support 286 for now.
-push sp
-pop ax
-cmp ax, sp
-jne .No386    ;; 286.
+section .bss
+align 16
+stack_bottom:
+	resb 16384
+stack_top:
 
-;; MSW bits 15->4 are clear?
-smsw ax
-cmp ax, 0x0fff0
-jae .No386   ;; is AX >= 0x0FFF0?
+section .text
+global _start:function (_start.end - _start)
+extern kmain
+_start:
+	mov esp, stack_top
+	call kmain
 
-;; 386 is enabled!!
-jmp 0x7e00
+	cli
+	.hang:
+		hlt
+		jmp .hang
+.end:
 
-.No386:
-  mov bx, string_bad286
-  call printf
-
-;; Returned? Quit.
-hcf
-jmp $
-
-.Failure:
-  mov bx, string_nodisk
-  call printf
-  hcf
-
-
-printf:
-  push ax
-  push bx
-
-  mov ah, 0x0e
-  .Loop:
-    cmp [bx], byte 0
-    je .Exit
-
-    mov al, [bx]
-    int 0x10
-
-    inc bx
-    jmp .Loop
-  .Exit:
-    pop bx
-    pop ax
-  ret
-
-string_nodisk: db `No dice! Can't read from 7e00h.`, 0
-string_bad286: db `Sorry, DXB doesn't support the 80286.`, 0
-
-times 510-($-$$) db 0
-dw 0xaa55
