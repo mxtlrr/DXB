@@ -3,8 +3,9 @@
 #include <stdint.h>
 
 #include "bios.h"
-#include "libc/stdio.h"
 #include "arch/idt.h"
+#include "disk/ata.h"
+#include "libc/stdio.h"
 
 extern int check_386(void);
 extern void load_gdt(void);
@@ -29,8 +30,8 @@ void kmain(void){
 	idt_init();
 	printf("[ %gOK%g ] IDT is enabled!\n", VGA_COLOR_LIGHT_GREEN, VGA_COLOR_WHITE);
 
-	// Ok
-	asm("int $3");
+	printf("[ %gTEST%g ] Testing ATA ident driver\n", VGA_COLOR_CYAN, VGA_COLOR_WHITE);
+	ident_drive(MASTER_DRIVE);
 
 	for(;;) asm("hlt");
 }
