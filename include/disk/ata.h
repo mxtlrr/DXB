@@ -56,8 +56,14 @@ uint8_t ata_read_status();
 // Send a command to the ATA controller
 void ata_send_cmd(uint8_t cmd);
 
-void ident_drive(uint8_t drive);
+uint8_t ident_drive(uint8_t drive);
 
 
 void ata_handle_err();
 void ata_reset();
+
+/* Return values from ident_drive */
+#define ATAPI_DEV 0xAF
+#define PATA_DEV  0x00    /* This is what we want! */
+#define SATA_DEV  0xEB    /* Eventually I'l write a drier for this... */
+#define NO_DEV    0xFF
