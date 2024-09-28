@@ -96,14 +96,34 @@ ata_packet_t read_sector(uint8_t drive, uint16_t sector){
     return packet;
   }
 
-  // No error! Success!
-  printf("[ %gATA%g ] read sector %d from disk!\n",
-        VGA_COLOR_CYAN, VGA_COLOR_WHITE, sector);
-
-
-  for(int i = 0; i < 256; i++) {
-    packet.sector_data[i] = inw(DATA_REG);
-  }
+  for(int i = 0; i < 256; i++) packet.sector_data[i] = inw(DATA_REG);
   packet.status_code = STATUS_CODE_SUCCESS;
   return packet;
+}
+
+uint8_t write_sector(ata_packet_t packet, uint8_t drive, uint16_t sector){
+  /* Literally the same as read_sector, except we use,
+   * a different command byte & we use multible outw */
+  uint8_t return_code = STATUS_CODE_SUCCESS;
+  
+  outb(DRIVE_SEL, drive);
+  outb(SECT_CT, 1);
+  outb(SECT_NUM, sector);
+
+  // Cylinder
+  outb(CYLIN_LO, 0);
+  outb(CYLIN_HI, 0);
+
+  // Send command..
+  outb(COMMAND, WRITE_SECT_NO_R);
+  if(inb(STATUS) & PREV_CMD_ERR){ // Failed?
+    printf("[ %gERR%g ] writing to ATA disk 0x%x failed!.\n\terror code is: 0x%x\n",
+        VGA_COLOR_RED, VGA_COLOR_WHITE, drive, inb(ERR_REG));
+    return STATUS_CODE_FAILURE;
+  }
+
+  // Write!
+  for(int i = 0; i < 256; i++)
+    outw(DATA_REG, packet.sector_data[i]);
+  return return_code;
 }

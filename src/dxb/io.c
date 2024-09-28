@@ -16,6 +16,10 @@ uint16_t inw(uint16_t port){
 	return ret;
 }
 
+void outw(uint16_t port, uint16_t val){
+	__asm__ volatile("outw %w0, %w1" :: "a"(val), "Nd"(port) : "memory");
+}
+
 void io_wait(void) {
 	asm volatile ("outb %%al, $0x80" : : "a"(0));
 }

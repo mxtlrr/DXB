@@ -77,3 +77,5 @@ typedef struct {
 /* Note that sector 0 will NOT work! You will have to use
  * a sector (>=1).*/
 ata_packet_t read_sector(uint8_t drive, uint16_t sector);
+
+uint8_t write_sector(ata_packet_t packet, uint8_t drive, uint16_t sector);
