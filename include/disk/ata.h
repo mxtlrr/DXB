@@ -47,9 +47,6 @@ enum COMMAND_BYTES {
   WRITE_LONG_WR   = 0x33
 };
 
-// 83th
-#define LBA48_ALLOWED (1<<10)
-
 // Read from the ATA status register.
 uint8_t ata_read_status();
 
@@ -67,3 +64,16 @@ void ata_reset();
 #define PATA_DEV  0x00    /* This is what we want! */
 #define SATA_DEV  0xEB    /* Eventually I'l write a drier for this... */
 #define NO_DEV    0xFF
+
+/* Stuff returned from a typical ATA write/read. */
+typedef struct {
+  uint8_t  status_code; // See below
+  uint16_t sector_data[256];
+} ata_packet_t;
+
+#define STATUS_CODE_SUCCESS 0x00
+#define STATUS_CODE_FAILURE 0x01
+
+/* Note that sector 0 will NOT work! You will have to use
+ * a sector (>=1).*/
+ata_packet_t read_sector(uint8_t drive, uint16_t sector);

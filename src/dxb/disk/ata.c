@@ -60,3 +60,50 @@ void ata_reset() {
   outb(0x3F6, 0x00);
   while (inb(0x1F7) & (1 << 7)) io_wait();
 }
+
+ata_packet_t read_sector(uint8_t drive, uint16_t sector){
+  ata_packet_t packet;
+
+
+  // Read drive
+  outb(DRIVE_SEL, drive);
+
+  // Sector 1
+  outb(SECT_CT,  1); // 1 sector to read
+  outb(SECT_NUM, sector);
+
+  // Cylinder 0
+  outb(CYLIN_LO, 0);
+  outb(CYLIN_HI, 0);
+
+  // Send the command
+  outb(COMMAND, READ_SECTORS_WR);
+
+  /*
+    still_going:
+      in      al,dx
+      test    al,8
+      jz      still_going
+  */
+  while((inb(STATUS) & SECT_BUFF_SV) == 0);
+
+  // Error?
+  if(inb(STATUS) & PREV_CMD_ERR){
+    printf("[ %gERR%g ] reading from ATA disk 0x%x failed!.\n\terror code is: 0x%x\n",
+        VGA_COLOR_RED, VGA_COLOR_WHITE, drive, inb(ERR_REG));
+   
+    packet.status_code = STATUS_CODE_FAILURE;
+    return packet;
+  }
+
+  // No error! Success!
+  printf("[ %gATA%g ] read sector %d from disk!\n",
+        VGA_COLOR_CYAN, VGA_COLOR_WHITE, sector);
+
+
+  for(int i = 0; i < 256; i++) {
+    packet.sector_data[i] = inw(DATA_REG);
+  }
+  packet.status_code = STATUS_CODE_SUCCESS;
+  return packet;
+}
