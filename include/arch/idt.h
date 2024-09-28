@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "io.h"
+
 #define CSG 0x08
 #define IDT_MAX_DESCRIPTORS 256
 
@@ -26,6 +28,6 @@ typedef struct {
 	uint32_t ip, cs, eflags;
 } registers_t;
 
-
+void remap_pic();
 void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags);
 void idt_init(void);

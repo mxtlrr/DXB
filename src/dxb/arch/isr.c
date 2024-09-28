@@ -20,3 +20,16 @@ void exception_handler(registers_t* r){
 
   for(;;) asm("cli//hlt");
 }
+
+isr_t handlers[256];
+void irq_handler(registers_t* r){
+  // Send EOI
+	if (r->int_no >= 40) outb(0xA0, 0x20);
+	outb(0x20, 0x20);
+
+  // Actually handle it?!?!?/
+  if(handlers[r->int_no] != 0){
+    isr_t r1 = handlers[r->int_no];
+    r1(r);
+  }
+}

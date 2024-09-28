@@ -54,6 +54,5 @@ void kmain(void){
 		to_write = SLAVE_DRIVE;
 	}
 	
-
 	for(;;) asm("hlt");
 }
